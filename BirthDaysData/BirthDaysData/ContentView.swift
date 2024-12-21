@@ -1,23 +1,26 @@
 //___FILEHEADER___
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
-    //初期データ
-    @State private var friends:[Friends]=[
-        Friends(name: "aaa", birthDay: .now),
-        Friends(name: "bbb", birthDay: Date(timeIntervalSince1970: 100))
-        
-    ]
+    //誕生日が早い順に並べ替える
+    @Query(sort:\Friends.birthDay) private var friends:[Friends]
+    // Friends の model が context となる
+    @Environment(\.modelContext) private var context
+    
     @State private var newName = ""
     @State private var newBirthdayData = Date.now
     
     var body: some View {
         NavigationStack{
-        List(friends,id:\.name){
+        List(friends){
             friend in
                 HStack{
-                    Text(friend.name)
+                    if(friend.isBirthday){
+                        Image(systemName:"birthday.cake")
+                    }
+                    Text(friend.name).bold(friend.isBirthday).foregroundColor(friend.isBirthday ? .accentColor: nil)
                     Spacer()
                     Text(friend.birthDay,format: .dateTime.month(.wide).day().year())
 
@@ -27,7 +30,7 @@ struct ContentView: View {
             //ボトムバー
         .safeAreaInset(edge:.bottom){
             VStack(alignment:.center,spacing: 20){
-                Text(" New Birthday Date.").font(.headline)
+                Text(" New Birthday Data").font(.headline)
                 // 未来の日付を選ぶことができない、表示は日にちまで
                 DatePicker(selection:$newBirthdayData,in: Date.distantPast...Date.now,displayedComponents: .date){
                     //名前入力
@@ -38,13 +41,15 @@ struct ContentView: View {
                     let newFriend = Friends(name: newName, birthDay: newBirthdayData)
                     //保存してリストに追加
                     if(newFriend.name != ""){
-                        friends.append(newFriend)
+                        context.insert(newFriend)
                     }
                     // 保存したら入力欄はリセット
                     newName=""
                     newBirthdayData = .now
                 }.bold().foregroundColor(.blue)
                 }
+            .padding()
+            .background(.bar)
             }
         }
     }
@@ -52,4 +57,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .modelContainer(for:Friends.self,inMemory:true)
 }
