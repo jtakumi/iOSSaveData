@@ -4,8 +4,8 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    //初期データ
-    @Query private var friends:[Friends]
+    //誕生日が早い順に並べ替える
+    @Query(sort:\Friends.birthDay) private var friends:[Friends]
     // Friends の model が context となる
     @Environment(\.modelContext) private var context
     
@@ -14,10 +14,13 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack{
-        List(friends,id:\.name){
+        List(friends){
             friend in
                 HStack{
-                    Text(friend.name)
+                    if(friend.isBirthday){
+                        Image(systemName:"birthday.cake")
+                    }
+                    Text(friend.name).bold(friend.isBirthday).foregroundColor(friend.isBirthday ? .accentColor: nil)
                     Spacer()
                     Text(friend.birthDay,format: .dateTime.month(.wide).day().year())
 
@@ -48,14 +51,6 @@ struct ContentView: View {
             .padding()
             .background(.bar)
             }
-        .task{
-            context.insert(Friends(name: "John", birthDay: .now))
-            // 先に日にちの形式を決定しないと日付が入れられない
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            // エルビス関数を使うことが求められる
-            context.insert(Friends(name:"hiro tanaka",birthDay: dateFormatter.date(from: "2021-01-11") ?? Date(timeIntervalSince1970:0)))
-        }
         }
     }
 }

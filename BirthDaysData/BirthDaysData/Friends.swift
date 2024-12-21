@@ -20,4 +20,7 @@ class Friends {
         self.name = name
         self.birthDay = birthDay
     }
+    var isBirthday:Bool{
+        Calendar.current.isDateInToday(birthDay)
+    }
 }
